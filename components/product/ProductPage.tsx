@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Product, ProductConfiguration, defaultConfiguration } from '@/types/product';
 import ProductGallery from './ProductGallery';
@@ -15,7 +16,10 @@ interface ProductPageProps {
 }
 
 const ProductPage = ({ product, relatedProducts }: ProductPageProps) => {
-  const [showCustomization, setShowCustomization] = useState(false);
+  const searchParams = useSearchParams();
+  const shouldCustomize = searchParams.get('customize') === 'true';
+  
+  const [showCustomization, setShowCustomization] = useState(shouldCustomize);
   const [config, setConfig] = useState<ProductConfiguration>({
     ...defaultConfiguration,
     width: 24,
@@ -23,6 +27,13 @@ const ProductPage = ({ product, relatedProducts }: ProductPageProps) => {
     height: 24,
     heightFraction: '0',
   });
+
+  // Auto-open customization if URL parameter is present
+  useEffect(() => {
+    if (shouldCustomize) {
+      setShowCustomization(true);
+    }
+  }, [shouldCustomize]);
 
   // Calculate discount percentage
   const discountPercentage = product.originalPrice

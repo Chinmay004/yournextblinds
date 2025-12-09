@@ -90,7 +90,6 @@ const CategoryHero = ({ category, productCount }: CategoryHeroProps) => {
               className="object-cover"
               priority
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-white via-white/50 to-transparent lg:from-white/60 lg:via-white/20" />
           </div>
         </div>
       </div>

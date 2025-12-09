@@ -1,5 +1,8 @@
+'use client';
+
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { StarRating } from '@/components/product';
 
 interface ProductCardProps {
@@ -17,7 +20,15 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product, className = '' }: ProductCardProps) {
+  const router = useRouter();
   const imageUrl = product.image || product.images?.[0] || '';
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // Navigate to product page with a flag to auto-open customization
+    router.push(`/product/${product.slug}?customize=true`);
+  };
   
   return (
     <Link 
@@ -54,7 +65,7 @@ export default function ProductCard({ product, className = '' }: ProductCardProp
         </div>
         
         <button 
-          onClick={(e) => e.preventDefault()}
+          onClick={handleAddToCart}
           className="border border-black bg-white px-2.5 py-2.5 text-base text-black hover:bg-black hover:text-white transition-colors shrink-0"
         >
           Add to Cart

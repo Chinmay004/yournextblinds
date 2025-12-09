@@ -3,6 +3,7 @@
 import { useMemo } from 'react';
 import Link from 'next/link';
 import { Product, ProductConfiguration } from '@/types/product';
+import { useCart } from '@/context/CartContext';
 import ProductGallery from './ProductGallery';
 import StarRating from './StarRating';
 import {
@@ -53,6 +54,8 @@ const CustomizationModal = ({
   setConfig,
   onClose,
 }: CustomizationModalProps) => {
+  const { addToCart } = useCart();
+
   // Calculate additional cost based on selected options
   const additionalCost = useMemo(() => {
     let cost = 0;
@@ -95,9 +98,13 @@ const CustomizationModal = ({
 
   const totalPrice = product.price + additionalCost;
 
-  const handleBuyNow = () => {
-    console.log('Buy now with config:', config);
-    // Handle purchase logic
+  const handleAddToCart = () => {
+    // Create a modified product with the updated price including customizations
+    const productWithPrice = {
+      ...product,
+      price: totalPrice,
+    };
+    addToCart(productWithPrice, config);
   };
 
   return (
@@ -336,10 +343,10 @@ const CustomizationModal = ({
               <div className="text-xl md:text-2xl font-bold text-[#3a3a3a]">${totalPrice}</div>
             </div>
             <button
-              onClick={handleBuyNow}
+              onClick={handleAddToCart}
               className="bg-[#00473c] text-white py-2.5 md:py-3 px-6 md:px-8 rounded text-sm md:text-base font-medium hover:bg-[#003830] transition-colors"
             >
-              Buy Now
+              Add to Cart
             </button>
           </div>
         </div>

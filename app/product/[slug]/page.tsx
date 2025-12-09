@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import { Suspense } from 'react';
 import productsData from '@/data/products.json';
 import { Product } from '@/types/product';
 import { ProductPage } from '@/components/product';
@@ -61,10 +62,12 @@ export default async function ProductPageRoute({ params }: ProductPageProps) {
       <Header />
       <NavBar />
       <main className="bg-white min-h-screen">
-        <ProductPage
-          product={product}
-          relatedProducts={relatedProducts}
-        />
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+          <ProductPage
+            product={product}
+            relatedProducts={relatedProducts}
+          />
+        </Suspense>
         <FlashSale />
         <FAQ />
       </main>

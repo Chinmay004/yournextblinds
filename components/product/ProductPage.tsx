@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Product, ProductConfiguration, defaultConfiguration } from '@/types/product';
@@ -9,13 +9,21 @@ import ProductReviews from './ProductReviews';
 import RelatedProducts from './RelatedProducts';
 import CustomizationModal from './CustomizationModal';
 import StarRating from './StarRating';
+import { calculatePrice, formatPrice } from '@/lib/price';
 
 interface ProductPageProps {
   product: Product;
   relatedProducts: Product[];
+  basePricePerSquareMeter?: number; // Price per m² from backend
+  originalPricePerSquareMeter?: number; // Original price per m² from backend
 }
 
-const ProductPage = ({ product, relatedProducts }: ProductPageProps) => {
+const ProductPage = ({ 
+  product, 
+  relatedProducts,
+  basePricePerSquareMeter,
+  originalPricePerSquareMeter,
+}: ProductPageProps) => {
   const searchParams = useSearchParams();
   const shouldCustomize = searchParams.get('customize') === 'true';
   
@@ -35,9 +43,36 @@ const ProductPage = ({ product, relatedProducts }: ProductPageProps) => {
     }
   }, [shouldCustomize]);
 
+  // Calculate dynamic price based on size if basePricePerSquareMeter is provided
+  const calculatedPrice = useMemo(() => {
+    if (basePricePerSquareMeter) {
+      return calculatePrice(
+        basePricePerSquareMeter,
+        config.width,
+        config.widthFraction,
+        config.height,
+        config.heightFraction
+      );
+    }
+    return product.price;
+  }, [basePricePerSquareMeter, config.width, config.widthFraction, config.height, config.heightFraction, product.price]);
+
+  const calculatedOriginalPrice = useMemo(() => {
+    if (originalPricePerSquareMeter) {
+      return calculatePrice(
+        originalPricePerSquareMeter,
+        config.width,
+        config.widthFraction,
+        config.height,
+        config.heightFraction
+      );
+    }
+    return product.originalPrice;
+  }, [originalPricePerSquareMeter, config.width, config.widthFraction, config.height, config.heightFraction, product.originalPrice]);
+
   // Calculate discount percentage
-  const discountPercentage = product.originalPrice
-    ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
+  const discountPercentage = calculatedOriginalPrice
+    ? Math.round(((calculatedOriginalPrice - calculatedPrice) / calculatedOriginalPrice) * 100)
     : 0;
 
   if (showCustomization) {
@@ -47,6 +82,8 @@ const ProductPage = ({ product, relatedProducts }: ProductPageProps) => {
         config={config}
         setConfig={setConfig}
         onClose={() => setShowCustomization(false)}
+        basePricePerSquareMeter={basePricePerSquareMeter}
+        originalPricePerSquareMeter={originalPricePerSquareMeter}
       />
     );
   }
@@ -238,9 +275,9 @@ const ProductPage = ({ product, relatedProducts }: ProductPageProps) => {
                   <div className="lg:border-l lg:border-gray-200 lg:pl-6 border-t lg:border-t-0 border-gray-200 pt-4 lg:pt-0 mt-4 lg:mt-0">
                     <div className="text-xs md:text-sm text-[#0F9D49] mb-1">{discountPercentage}% off on First Order</div>
                     <div className="flex items-baseline gap-2 mb-3 md:mb-4">
-                      <span className="text-xl md:text-2xl font-bold text-[#3a3a3a]">$ {product.price}</span>
-                      {product.originalPrice > product.price && (
-                        <span className="text-xs md:text-sm text-gray-400 line-through">€ {product.originalPrice}</span>
+                      <span className="text-xl md:text-2xl font-bold text-[#3a3a3a]">€ {formatPrice(calculatedPrice).toFixed(2)}</span>
+                      {calculatedOriginalPrice > calculatedPrice && (
+                        <span className="text-xs md:text-sm text-gray-400 line-through">€ {formatPrice(calculatedOriginalPrice).toFixed(2)}</span>
                       )}
                     </div>
                     <button

@@ -1,23 +1,50 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { ProductCard } from '@/components/product';
-import productsData from '@/data/products.json';
+import { fetchAllProducts } from '@/lib/api';
+import { mapProductDataToProduct } from '@/lib/productMapper';
 
-// Use actual products from JSON - use first 5 products
-const products = productsData.products.slice(0, 5).map((product) => ({
-  id: product.id,
-  name: product.name,
-  slug: product.slug,
-  price: product.price,
-  originalPrice: product.originalPrice,
-  rating: product.rating,
-  image: product.images[0], // Use first image from the images array
-}));
-
-// BestSelling - Best selling products section with horizontal scroll
 const BestSelling = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [products, setProducts] = useState<Array<{
+    id: string;
+    name: string;
+    slug: string;
+    price: number;
+    originalPrice: number;
+    rating: number;
+    image?: string;
+    images?: string[];
+  }>>([]);
+
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        const response = await fetchAllProducts({ limit: 5 });
+        const mappedProducts = response.data
+          .slice(0, 5)
+          .map((productData) => {
+            const product = mapProductDataToProduct(productData);
+            return {
+              id: product.id,
+              name: product.name,
+              slug: product.slug,
+              price: product.price,
+              originalPrice: product.originalPrice,
+              rating: product.rating,
+              image: product.images[0],
+              images: product.images,
+            };
+          });
+        setProducts(mappedProducts);
+      } catch (error) {
+        console.error('Error fetching products:', error);
+      }
+    };
+
+    loadProducts();
+  }, []);
 
   const scroll = (direction: 'left' | 'right') => {
     if (scrollRef.current) {
@@ -32,7 +59,6 @@ const BestSelling = () => {
   return (
     <section className="bg-white py-12 md:py-16 lg:py-24 overflow-hidden">
       <div className="flex flex-col gap-6 md:gap-6 lg:gap-8">
-        {/* Header with Navigation */}
         <div className="flex items-center justify-between px-4 md:px-6 lg:px-20">
           <h2 className="text-xl md:text-2xl lg:text-[32px] font-medium text-[#3a3a3a]">
             Best Selling Products
@@ -59,7 +85,6 @@ const BestSelling = () => {
           </div>
         </div>
         
-        {/* Products Horizontal Scroll */}
         <div ref={scrollRef} className="w-full overflow-x-auto scrollbar-hide">
           <div className="flex gap-4 pl-4 md:pl-6 lg:pl-20">
             {products.map((product) => (
@@ -69,7 +94,6 @@ const BestSelling = () => {
                 className="shrink-0 w-[250px] md:w-[280px] lg:w-[311px]"
               />
             ))}
-            {/* Spacer for right padding when scrolled to end */}
             <div className="shrink-0 w-4 md:w-6 lg:w-12 h-px" aria-hidden="true" />
           </div>
         </div>

@@ -1,24 +1,20 @@
 import { TopBar, Header, NavBar, Footer } from '@/components';
 import { CategoryHero, CollectionFilters, CollectionProductGrid } from '@/components/collection';
-import productsData from '@/data/products.json';
+import { fetchAllProducts, fetchAllCategories } from '@/lib/api';
+import { mapProductDataToProduct } from '@/lib/productMapper';
+import { mapFilterToTagSlugs } from '@/lib/tagMapper';
+import { Product } from '@/types/product';
 
-// Category mapping for URL to display name
-const categoryMapping: Record<string, string> = {
-  'vertical-blinds': 'Vertical Blinds',
-  'roller-blinds': 'Roller Blinds',
-  'venetian-blinds': 'Venetian Blinds',
-  'roman-blinds': 'Roman Blinds',
-  'wooden-blinds': 'Wooden Blinds',
-  'skylight-blinds': 'Skylight Blinds',
-  'day-and-night-blinds': 'Day and Night Blinds',
-  'children': 'Children',
-};
-
-// Generate static params for all categories
-export function generateStaticParams() {
-  return Object.keys(categoryMapping).map((category) => ({
-    category,
-  }));
+export async function generateStaticParams() {
+  try {
+    const response = await fetchAllCategories();
+    return response.data.map((category) => ({
+      category: category.slug,
+    }));
+  } catch (error) {
+    console.error('Error generating static params:', error);
+    return [];
+  }
 }
 
 export default async function CategoryPage({
@@ -31,29 +27,58 @@ export default async function CategoryPage({
   const { category } = await params;
   const filters = await searchParams;
 
-  // Get category display name
-  const categoryName = categoryMapping[category];
-
-  // Get all products
-  let filteredProducts = productsData.products;
-
-  // Apply category filter from URL path
-  if (categoryName) {
-    filteredProducts = filteredProducts.filter(
-      (product) => product.category === categoryName
-    );
+  let categoryName: string | undefined;
+  try {
+    const categoriesResponse = await fetchAllCategories();
+    const categoryData = categoriesResponse.data.find((cat) => cat.slug === category);
+    categoryName = categoryData?.name;
+  } catch (error) {
+    console.error('Error fetching categories:', error);
   }
 
-  // Apply pattern filter
   const pattern = filters.pattern;
+  const color = filters.color;
+  const window = filters.window;
+  const room = filters.room;
+  const solution = filters.solution;
+
+  const tagSlugs: string[] = [];
+  
   if (pattern && typeof pattern === 'string') {
-    // Pattern filtering will work when pattern field is added to products
+    tagSlugs.push(...mapFilterToTagSlugs('pattern', pattern));
+  }
+  if (color && typeof color === 'string') {
+    tagSlugs.push(...mapFilterToTagSlugs('color', color));
+  }
+  if (window && typeof window === 'string') {
+    tagSlugs.push(...mapFilterToTagSlugs('window', window));
+  }
+  if (room && typeof room === 'string') {
+    tagSlugs.push(...mapFilterToTagSlugs('room', room));
+  }
+  if (solution && typeof solution === 'string') {
+    tagSlugs.push(...mapFilterToTagSlugs('solution', solution));
   }
 
-  // Apply color filter
-  const color = filters.color;
-  if (color && typeof color === 'string') {
-    // Color filtering will work when color field is added to products
+  const uniqueTagSlugs = [...new Set(tagSlugs)];
+
+  let filteredProducts: Product[] = [];
+  try {
+    const response = await fetchAllProducts({ 
+      limit: 1000,
+      tags: uniqueTagSlugs.length > 0 ? uniqueTagSlugs : undefined,
+    });
+    
+    if (categoryName) {
+      filteredProducts = response.data
+        .filter((data) => data.categories.some((cat) => cat.name === categoryName))
+        .map((data) => mapProductDataToProduct(data));
+    } else {
+      filteredProducts = response.data.map((data) => mapProductDataToProduct(data));
+    }
+  } catch (error) {
+    console.error('Error fetching products:', error);
+    filteredProducts = [];
   }
 
   return (
@@ -81,6 +106,9 @@ export default async function CategoryPage({
                   activeFilters={{
                     pattern: typeof pattern === 'string' ? pattern : undefined,
                     color: typeof color === 'string' ? color : undefined,
+                    window: typeof window === 'string' ? window : undefined,
+                    room: typeof room === 'string' ? room : undefined,
+                    solution: typeof solution === 'string' ? solution : undefined,
                   }}
                 />
               </div>

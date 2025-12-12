@@ -1,61 +1,64 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import productsData from '@/data/products.json';
+import { fetchAllCategories, CategoryData } from '@/lib/api';
 
 interface CollectionFiltersProps {
   currentCategory: string;
   activeFilters: {
     pattern?: string;
     color?: string;
+    window?: string;
+    room?: string;
+    solution?: string;
   };
 }
 
 export default function CollectionFilters({ currentCategory, activeFilters }: CollectionFiltersProps) {
   const searchParams = useSearchParams();
+  const [categories, setCategories] = useState<CategoryData[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Helper to build URL with filters
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const response = await fetchAllCategories();
+        setCategories(response.data);
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+        setCategories([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadCategories();
+  }, []);
+
   const buildFilterUrl = (filterType: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString());
+    const currentValue = params.get(filterType);
     
-    if (filterType === 'pattern') {
-      if (params.get('pattern') === value) {
-        params.delete('pattern');
-      } else {
-        params.set('pattern', value);
-      }
-    } else if (filterType === 'color') {
-      if (params.get('color') === value) {
-        params.delete('color');
-      } else {
-        params.set('color', value);
-      }
+    if (currentValue === value) {
+      params.delete(filterType);
+    } else {
+      params.set(filterType, value);
     }
     
     return `/collections/${currentCategory}${params.toString() ? `?${params.toString()}` : ''}`;
   };
 
   const clearFilters = () => {
-    return `/collections/${currentCategory}`;
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete('pattern');
+    params.delete('color');
+    params.delete('window');
+    params.delete('room');
+    params.delete('solution');
+    return `/collections/${currentCategory}${params.toString() ? `?${params.toString()}` : ''}`;
   };
-
-  // Calculate actual product counts for each category
-  const getCategoryCount = (categoryName: string) => {
-    return productsData.products.filter(p => p.category === categoryName).length;
-  };
-
-  // Category data with actual counts
-  const categories = [
-    { name: 'Vertical Blinds', slug: 'vertical-blinds', count: getCategoryCount('Vertical Blinds') },
-    { name: 'Roller Blinds', slug: 'roller-blinds', count: getCategoryCount('Roller Blinds') },
-    { name: 'Roman Blinds', slug: 'roman-blinds', count: getCategoryCount('Roman Blinds') },
-    { name: 'Venetian Blinds', slug: 'venetian-blinds', count: getCategoryCount('Venetian Blinds') },
-    { name: 'Wooden Blinds', slug: 'wooden-blinds', count: getCategoryCount('Wooden Blinds') },
-    { name: 'Skylight Blinds', slug: 'skylight-blinds', count: getCategoryCount('Skylight Blinds') },
-    { name: 'Day and Night Blinds', slug: 'day-and-night-blinds', count: getCategoryCount('Day and Night Blinds') },
-    { name: 'Children', slug: 'children', count: getCategoryCount('Children') },
-  ];
 
   const patterns = [
     'Abstract',
@@ -84,27 +87,35 @@ export default function CollectionFilters({ currentCategory, activeFilters }: Co
       {/* Category Filter */}
       <div>
         <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Category</h3>
-        <div className="space-y-1">
-          {categories.map((category) => {
-            const isActive = currentCategory === category.slug;
-            return (
-              <Link
-                key={category.slug}
-                href={`/collections/${category.slug}`}
-                className={`flex items-center justify-between px-2 py-1.5 rounded text-sm transition-colors ${
-                  isActive
-                    ? 'bg-gray-100 text-gray-900 font-medium'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                }`}
-              >
-                <span>{category.name}</span>
-                <span className="text-xs text-gray-400">
-                  {category.count}
-                </span>
-              </Link>
-            );
-          })}
-        </div>
+        {loading ? (
+          <div className="space-y-1">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="h-8 bg-gray-100 animate-pulse rounded"></div>
+            ))}
+          </div>
+        ) : (
+          <div className="space-y-1">
+            {categories.map((category) => {
+              const isActive = currentCategory === category.slug;
+              return (
+                <Link
+                  key={category.slug}
+                  href={`/collections/${category.slug}`}
+                  className={`flex items-center justify-between px-2 py-1.5 rounded text-sm transition-colors ${
+                    isActive
+                      ? 'bg-gray-100 text-gray-900 font-medium'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                  }`}
+                >
+                  <span>{category.name}</span>
+                  <span className="text-xs text-gray-400">
+                    {category.productCount}
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Pattern Filter */}
@@ -163,7 +174,7 @@ export default function CollectionFilters({ currentCategory, activeFilters }: Co
       </div>
 
       {/* Clear All Filters */}
-      {(activeFilters.pattern || activeFilters.color) && (
+      {(activeFilters.pattern || activeFilters.color || activeFilters.window || activeFilters.room || activeFilters.solution) && (
         <div className="pt-4 border-t border-gray-100">
           <Link
             href={clearFilters()}

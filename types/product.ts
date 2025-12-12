@@ -72,22 +72,6 @@ export interface MountOption {
   image: string;
 }
 
-export interface SizeOptions {
-  widthUnits: string[];
-  heightUnits: string[];
-  minWidth: number;
-  maxWidth: number;
-  minHeight: number;
-  maxHeight: number;
-}
-
-export interface ProductsData {
-  products: Product[];
-  rooms: Room[];
-  mountOptions: MountOption[];
-  sizeOptions: SizeOptions;
-}
-
 // Product Configuration State
 export interface ProductConfiguration {
   width: number;

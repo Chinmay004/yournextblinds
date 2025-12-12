@@ -6,9 +6,9 @@ import { Product, ProductConfiguration } from '@/types/product';
 import { useCart } from '@/context/CartContext';
 import ProductGallery from './ProductGallery';
 import StarRating from './StarRating';
+import { calculatePrice, formatPrice } from '@/lib/price';
 import {
   SizeSelector,
-  RoomSelector,
   MountSelector,
   HeadrailSelector,
   OpenStyleSelector,
@@ -21,9 +21,10 @@ import {
   FabricTypeSelector,
   BottomBarSelector,
   LiftSelector,
+  // RoomSelector,
 } from './customization';
 import {
-  ROOM_OPTIONS,
+ // ROOM_OPTIONS,
   MOUNT_OPTIONS,
   CONTROL_OPTIONS,
   CONTROL_POSITION_OPTIONS,
@@ -46,6 +47,8 @@ interface CustomizationModalProps {
   config: ProductConfiguration;
   setConfig: React.Dispatch<React.SetStateAction<ProductConfiguration>>;
   onClose: () => void;
+  basePricePerSquareMeter?: number; // Price per m² from backend
+  originalPricePerSquareMeter?: number; // Original price per m² from backend
 }
 
 const CustomizationModal = ({
@@ -53,8 +56,24 @@ const CustomizationModal = ({
   config,
   setConfig,
   onClose,
+  basePricePerSquareMeter,
+  originalPricePerSquareMeter,
 }: CustomizationModalProps) => {
   const { addToCart } = useCart();
+
+  // Calculate base price based on size if basePricePerSquareMeter is provided
+  const basePrice = useMemo(() => {
+    if (basePricePerSquareMeter) {
+      return calculatePrice(
+        basePricePerSquareMeter,
+        config.width,
+        config.widthFraction,
+        config.height,
+        config.heightFraction
+      );
+    }
+    return product.price;
+  }, [basePricePerSquareMeter, config.width, config.widthFraction, config.height, config.heightFraction, product.price]);
 
   // Calculate additional cost based on selected options
   const additionalCost = useMemo(() => {
@@ -96,7 +115,7 @@ const CustomizationModal = ({
     return cost;
   }, [config, product.features]);
 
-  const totalPrice = product.price + additionalCost;
+  const totalPrice = basePrice + additionalCost;
 
   const handleAddToCart = () => {
     // Create a modified product with the updated price including customizations
@@ -163,7 +182,7 @@ const CustomizationModal = ({
                 )}
 
                 {/* Room Selector */}
-                {product.features.hasRoom && (
+                {/*{product.features.hasRoom && (
                   <div className="pt-6">
                     <RoomSelector
                       rooms={ROOM_OPTIONS}
@@ -171,7 +190,7 @@ const CustomizationModal = ({
                       onRoomChange={(roomId) => setConfig({ ...config, room: roomId })}
                     />
                   </div>
-                )}
+                )} */}
 
                 {/* Mount Selector */}
                 {product.features.hasMount && (
@@ -340,7 +359,7 @@ const CustomizationModal = ({
           <div className="flex items-center justify-between gap-4">
             <div>
               <span className="text-xs md:text-sm text-gray-500">Price</span>
-              <div className="text-xl md:text-2xl font-bold text-[#3a3a3a]">${totalPrice}</div>
+              <div className="text-xl md:text-2xl font-bold text-[#3a3a3a]">€ {formatPrice(totalPrice).toFixed(2)}</div>
             </div>
             <button
               onClick={handleAddToCart}

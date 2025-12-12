@@ -1,5 +1,4 @@
-// Hardcoded customization options for all products
-// Products in products.json will only specify which options are available via features flags
+// Customization options for all products
 
 export const ROOM_OPTIONS = [
   { id: "living-room", name: "Living Room", icon: "/products/room/livingRoom.svg" },

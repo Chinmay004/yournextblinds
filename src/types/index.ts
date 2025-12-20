@@ -41,6 +41,9 @@ export interface ProductFeatures {
   hasControlSide: boolean;
   hasBottomChain: boolean;
   hasBracketType: boolean;
+  hasChainColor: boolean;
+  hasWrappedCassette: boolean;
+  hasCassetteMatchingBar: boolean;
 }
 
 export interface Product {
@@ -80,6 +83,9 @@ export interface ProductConfiguration {
   controlSide: string | null;
   bottomChain: string | null;
   bracketType: string | null;
+  chainColor: string | null;
+  wrappedCassette: string | null;
+  cassetteMatchingBar: string | null;
 }
 
 export const DEFAULT_CONFIGURATION: ProductConfiguration = {
@@ -97,6 +103,9 @@ export const DEFAULT_CONFIGURATION: ProductConfiguration = {
   controlSide: null,
   bottomChain: null,
   bracketType: null,
+  chainColor: null,
+  wrappedCassette: null,
+  cassetteMatchingBar: null,
 };
 
 // ============================================
@@ -205,6 +214,9 @@ export const DEFAULT_PRODUCT_FEATURES: ProductFeatures = {
   hasControlSide: false,
   hasBottomChain: false,
   hasBracketType: false,
+  hasChainColor: false,
+  hasWrappedCassette: false,
+  hasCassetteMatchingBar: false,
 };
 
 export const DEFAULT_ESTIMATED_DELIVERY = '22 December 2025';

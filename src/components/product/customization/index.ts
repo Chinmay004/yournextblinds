@@ -8,3 +8,6 @@ export { default as StackingSelector } from './StackingSelector';
 export { default as ControlSideSelector } from './ControlSideSelector';
 export { default as BottomChainSelector } from './BottomChainSelector';
 export { default as BracketTypeSelector } from './BracketTypeSelector';
+export { default as ChainColorSelector } from './ChainColorSelector';
+export { default as WrappedCassetteSelector } from './WrappedCassetteSelector';
+export { default as CassetteMatchingBarSelector } from './CassetteMatchingBarSelector';

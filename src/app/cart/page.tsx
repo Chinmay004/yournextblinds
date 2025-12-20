@@ -7,6 +7,22 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
 
+import {
+  HEADRAIL_OPTIONS,
+  HEADRAIL_COLOUR_OPTIONS,
+  INSTALLATION_METHOD_OPTIONS,
+  ROLLER_INSTALLATION_OPTIONS,
+  CONTROL_OPTIONS,
+  ROLLER_CONTROL_OPTIONS,
+  STACKING_OPTIONS,
+  CONTROL_SIDE_OPTIONS,
+  BOTTOM_CHAIN_OPTIONS,
+  BRACKET_TYPE_OPTIONS,
+  CHAIN_COLOR_OPTIONS,
+  WRAPPED_CASSETTE_OPTIONS,
+  CASSETTE_MATCHING_BAR_OPTIONS,
+} from '@/data/customizations';
+
 export default function CartPage() {
   const { cart, removeFromCart, updateQuantity, clearCart } = useCart();
   const [showClearConfirm, setShowClearConfirm] = useState(false);
@@ -17,22 +33,181 @@ export default function CartPage() {
 
   const formatConfiguration = (config: any) => {
     const parts = [];
-    
-    const widthStr = `${config.width}${config.widthFraction !== '0' ? ` ${config.widthFraction}` : ''}"`;
-    const heightStr = `${config.height}${config.heightFraction !== '0' ? ` ${config.heightFraction}` : ''}"`;
-    parts.push(`Size: ${widthStr} × ${heightStr}`);
-    
+
+    // Size (always show if available)
+    if (config.width && config.height) {
+      const widthStr = `${config.width}${config.widthFraction !== '0' ? ` ${config.widthFraction}` : ''}`;
+      const heightStr = `${config.height}${config.heightFraction !== '0' ? ` ${config.heightFraction}` : ''}`;
+      parts.push(`Size: ${widthStr}" × ${heightStr}"`);
+    }
+
+    // Headrail Type
+    if (config.headrail) {
+      const headrailOption = HEADRAIL_OPTIONS.find(opt => opt.id === config.headrail);
+      parts.push(`Headrail: ${headrailOption?.name || config.headrail}`);
+    }
+
+    // Headrail Colour
+    if (config.headrailColour) {
+      const colourOption = HEADRAIL_COLOUR_OPTIONS.find(opt => opt.id === config.headrailColour);
+      parts.push(`Headrail Colour: ${colourOption?.name || config.headrailColour}`);
+    }
+
+    // Installation Method
+    if (config.installationMethod) {
+      const methodOption = INSTALLATION_METHOD_OPTIONS.find(opt => opt.id === config.installationMethod) ||
+        ROLLER_INSTALLATION_OPTIONS.find(opt => opt.id === config.installationMethod);
+      parts.push(`Installation: ${methodOption?.name || config.installationMethod}`);
+    }
+
+    // Control Option
+    if (config.controlOption) {
+      const controlOpt = CONTROL_OPTIONS.find(opt => opt.id === config.controlOption) ||
+        ROLLER_CONTROL_OPTIONS.find(opt => opt.id === config.controlOption);
+      parts.push(`Control: ${controlOpt?.name || config.controlOption}`);
+    }
+
+    // Stacking
+    if (config.stacking) {
+      const stackingOption = STACKING_OPTIONS.find(opt => opt.id === config.stacking);
+      parts.push(`Stacking: ${stackingOption?.name || config.stacking}`);
+    }
+
+    // Control Side
+    if (config.controlSide) {
+      const sideOption = CONTROL_SIDE_OPTIONS.find(opt => opt.id === config.controlSide);
+      parts.push(`Control Side: ${sideOption?.name || config.controlSide}`);
+    }
+
+    // Bottom Chain
+    if (config.bottomChain) {
+      const chainOption = BOTTOM_CHAIN_OPTIONS.find(opt => opt.id === config.bottomChain);
+      parts.push(`Bottom Weight/Chain: ${chainOption?.name || config.bottomChain}`);
+    }
+
+    // Bracket Type
+    if (config.bracketType) {
+      const bracketOption = BRACKET_TYPE_OPTIONS.find(opt => opt.id === config.bracketType);
+      parts.push(`Bracket Type: ${bracketOption?.name || config.bracketType}`);
+    }
+
+    // Chain Color
+    if (config.chainColor) {
+      const colorOption = CHAIN_COLOR_OPTIONS.find(opt => opt.id === config.chainColor);
+      parts.push(`Chain Color: ${colorOption?.name || config.chainColor}`);
+    }
+
+    // Wrapped Cassette
+    if (config.wrappedCassette) {
+      const cassetteOption = WRAPPED_CASSETTE_OPTIONS.find(opt => opt.id === config.wrappedCassette);
+      parts.push(`Wrapped Cassette: ${cassetteOption?.name || config.wrappedCassette}`);
+    }
+
+    // Cassette Matching Bar
+    if (config.cassetteMatchingBar) {
+      const barOption = CASSETTE_MATCHING_BAR_OPTIONS.find(opt => opt.id === config.cassetteMatchingBar);
+      parts.push(`Cassette Bar: ${barOption?.name || config.cassetteMatchingBar}`);
+    }
+
+    // Legacy fields (for backwards compatibility)
     if (config.mount) {
       parts.push(`Mount: ${config.mount.charAt(0).toUpperCase() + config.mount.slice(1)}`);
     }
     if (config.room) parts.push(`Room: ${config.room}`);
     if (config.colour) parts.push(`Color: ${config.colour}`);
-    if (config.headrail) parts.push(`Headrail: ${config.headrail}`);
     if (config.valance) parts.push(`Valance: ${config.valance}`);
     if (config.control) parts.push(`Control: ${config.control}`);
     if (config.lift) parts.push(`Lift: ${config.lift}`);
-    
+
     return parts;
+  };
+
+  const getCustomizationCosts = (config: any) => {
+    const costs: { label: string; price: number }[] = [];
+
+    // Headrail Colour
+    if (config.headrailColour) {
+      const option = HEADRAIL_COLOUR_OPTIONS.find(opt => opt.id === config.headrailColour);
+      if (option?.price && option.price > 0) {
+        costs.push({ label: option.name, price: option.price });
+      }
+    }
+
+    // Installation Method
+    if (config.installationMethod) {
+      const option = INSTALLATION_METHOD_OPTIONS.find(opt => opt.id === config.installationMethod) ||
+        ROLLER_INSTALLATION_OPTIONS.find(opt => opt.id === config.installationMethod);
+      if (option?.price && option.price > 0) {
+        costs.push({ label: option.name, price: option.price });
+      }
+    }
+
+    // Control Option
+    if (config.controlOption) {
+      const option = CONTROL_OPTIONS.find(opt => opt.id === config.controlOption) ||
+        ROLLER_CONTROL_OPTIONS.find(opt => opt.id === config.controlOption);
+      if (option?.price && option.price > 0) {
+        costs.push({ label: option.name, price: option.price });
+      }
+    }
+
+    // Stacking
+    if (config.stacking) {
+      const option = STACKING_OPTIONS.find(opt => opt.id === config.stacking);
+      if (option?.price && option.price > 0) {
+        costs.push({ label: option.name, price: option.price });
+      }
+    }
+
+    // Control Side
+    if (config.controlSide) {
+      const option = CONTROL_SIDE_OPTIONS.find(opt => opt.id === config.controlSide);
+      if (option?.price && option.price > 0) {
+        costs.push({ label: option.name, price: option.price });
+      }
+    }
+
+    // Bottom Chain
+    if (config.bottomChain) {
+      const option = BOTTOM_CHAIN_OPTIONS.find(opt => opt.id === config.bottomChain);
+      if (option?.price && option.price > 0) {
+        costs.push({ label: option.name, price: option.price });
+      }
+    }
+
+    // Bracket Type
+    if (config.bracketType) {
+      const option = BRACKET_TYPE_OPTIONS.find(opt => opt.id === config.bracketType);
+      if (option?.price && option.price > 0) {
+        costs.push({ label: option.name, price: option.price });
+      }
+    }
+
+    // Chain Color
+    if (config.chainColor) {
+      const option = CHAIN_COLOR_OPTIONS.find(opt => opt.id === config.chainColor);
+      if (option?.price && option.price > 0) {
+        costs.push({ label: option.name, price: option.price });
+      }
+    }
+
+    // Wrapped Cassette
+    if (config.wrappedCassette) {
+      const option = WRAPPED_CASSETTE_OPTIONS.find(opt => opt.id === config.wrappedCassette);
+      if (option?.price && option.price > 0) {
+        costs.push({ label: option.name, price: option.price });
+      }
+    }
+
+    // Cassette Matching Bar
+    if (config.cassetteMatchingBar) {
+      const option = CASSETTE_MATCHING_BAR_OPTIONS.find(opt => opt.id === config.cassetteMatchingBar);
+      if (option?.price && option.price > 0) {
+        costs.push({ label: option.name, price: option.price });
+      }
+    }
+
+    return costs;
   };
 
   if (cart.items.length === 0) {
@@ -147,6 +322,25 @@ export default function CartPage() {
                                 {detail}
                               </p>
                             ))}
+
+                            {/* Show customization costs if any */}
+                            {(() => {
+                              const costs = getCustomizationCosts(item.configuration);
+                              if (costs.length > 0) {
+                                return (
+                                  <div className="mt-2 pt-2 border-t border-gray-200">
+                                    <p className="text-xs font-medium text-gray-700 mb-1">Customization Costs:</p>
+                                    {costs.map((cost, idx) => (
+                                      <p key={idx} className="text-xs text-[#00473c] flex justify-between">
+                                        <span>+ {cost.label}</span>
+                                        <span className="font-medium">£{cost.price.toFixed(2)}</span>
+                                      </p>
+                                    ))}
+                                  </div>
+                                );
+                              }
+                              return null;
+                            })()}
                           </div>
 
                           <div className="flex items-center justify-between gap-4 flex-wrap">
@@ -203,7 +397,7 @@ export default function CartPage() {
             <div className="lg:w-[380px]">
               <div className="bg-white rounded-lg p-6 sticky top-6">
                 <h2 className="text-xl font-bold text-[#3a3a3a] mb-4">Order Summary</h2>
-                
+
                 <div className="space-y-3 mb-4">
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Subtotal</span>

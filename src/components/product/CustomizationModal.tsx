@@ -17,16 +17,24 @@ import {
   ControlSideSelector,
   BottomChainSelector,
   BracketTypeSelector,
+  ChainColorSelector,
+  WrappedCassetteSelector,
+  CassetteMatchingBarSelector,
 } from './customization';
 import {
   HEADRAIL_OPTIONS,
   HEADRAIL_COLOUR_OPTIONS,
   INSTALLATION_METHOD_OPTIONS,
+  ROLLER_INSTALLATION_OPTIONS,
   CONTROL_OPTIONS,
+  ROLLER_CONTROL_OPTIONS,
   STACKING_OPTIONS,
   CONTROL_SIDE_OPTIONS,
   BOTTOM_CHAIN_OPTIONS,
   BRACKET_TYPE_OPTIONS,
+  CHAIN_COLOR_OPTIONS,
+  WRAPPED_CASSETTE_OPTIONS,
+  CASSETTE_MATCHING_BAR_OPTIONS,
 } from '@/data/customizations';
 
 interface CustomizationModalProps {
@@ -67,6 +75,63 @@ const CustomizationModal = ({
     return product.price;
   }, [basePricePerSquareMeter, config.width, config.widthFraction, config.height, config.heightFraction, product.price]);
 
+  // Determine which options to use based on product category
+  const isRollerOrDayNight = useMemo(() => {
+    const category = product.category.toLowerCase();
+    return category.includes('roller') || category.includes('day') || category.includes('night');
+  }, [product.category]);
+
+  const installationOptions = isRollerOrDayNight ? ROLLER_INSTALLATION_OPTIONS : INSTALLATION_METHOD_OPTIONS;
+  const controlOptions = isRollerOrDayNight ? ROLLER_CONTROL_OPTIONS : CONTROL_OPTIONS;
+
+  // Determine which options should be visible based on product type and selected headrail
+  const visibleOptions = useMemo(() => {
+    const headrail = config.headrail;
+
+    // For roller blinds and day/night blinds (no headrail)
+    if (isRollerOrDayNight) {
+      return {
+        showSize: true,
+        showHeadrail: false,
+        showHeadrailColour: false,
+        showInstallationMethod: true, // Always show for roller/day-night
+        showControlOption: true, // Always show for roller/day-night
+        showStacking: false,
+        showControlSide: false,
+        showBottomChain: false,
+        showBracketType: false,
+      };
+    }
+
+    // For vertical blinds (with headrail)
+    return {
+      // Size and Headrail are always visible
+      showSize: true,
+      showHeadrail: true,
+
+      // Headrail Colour only for Platinum
+      showHeadrailColour: headrail === 'platinum',
+
+      // Installation Method for Classic and Platinum
+      showInstallationMethod: headrail === 'classic' || headrail === 'platinum',
+
+      // Control Option for Classic and Platinum
+      showControlOption: headrail === 'classic' || headrail === 'platinum',
+
+      // Stacking for Classic and Platinum
+      showStacking: headrail === 'classic' || headrail === 'platinum',
+
+      // Control Side for Classic and Platinum
+      showControlSide: headrail === 'classic' || headrail === 'platinum',
+
+      // Bottom Chain for all headrail types (Louvres, Classic, Platinum)
+      showBottomChain: headrail === 'louvres-only' || headrail === 'classic' || headrail === 'platinum',
+
+      // Bracket Type for Classic and Platinum
+      showBracketType: headrail === 'classic' || headrail === 'platinum',
+    };
+  }, [config.headrail, isRollerOrDayNight]);
+
   // Calculate additional cost based on selected options
   const additionalCost = useMemo(() => {
     let cost = 0;
@@ -76,43 +141,58 @@ const CustomizationModal = ({
       cost += option?.price || 0;
     }
 
-    if (config.headrailColour && product.features.hasHeadrailColour) {
+    if (config.headrailColour && product.features.hasHeadrailColour && visibleOptions.showHeadrailColour) {
       const option = HEADRAIL_COLOUR_OPTIONS.find((o) => o.id === config.headrailColour);
       cost += option?.price || 0;
     }
 
-    if (config.installationMethod && product.features.hasInstallationMethod) {
-      const option = INSTALLATION_METHOD_OPTIONS.find((o) => o.id === config.installationMethod);
+    if (config.installationMethod && product.features.hasInstallationMethod && visibleOptions.showInstallationMethod) {
+      const option = installationOptions.find((o) => o.id === config.installationMethod);
       cost += option?.price || 0;
     }
 
-    if (config.controlOption && product.features.hasControlOption) {
-      const option = CONTROL_OPTIONS.find((o) => o.id === config.controlOption);
+    if (config.controlOption && product.features.hasControlOption && visibleOptions.showControlOption) {
+      const option = controlOptions.find((o) => o.id === config.controlOption);
       cost += option?.price || 0;
     }
 
-    if (config.stacking && product.features.hasStacking) {
+    if (config.stacking && product.features.hasStacking && visibleOptions.showStacking) {
       const option = STACKING_OPTIONS.find((o) => o.id === config.stacking);
       cost += option?.price || 0;
     }
 
-    if (config.controlSide && product.features.hasControlSide) {
+    if (config.controlSide && product.features.hasControlSide && visibleOptions.showControlSide) {
       const option = CONTROL_SIDE_OPTIONS.find((o) => o.id === config.controlSide);
       cost += option?.price || 0;
     }
 
-    if (config.bottomChain && product.features.hasBottomChain) {
+    if (config.bottomChain && product.features.hasBottomChain && visibleOptions.showBottomChain) {
       const option = BOTTOM_CHAIN_OPTIONS.find((o) => o.id === config.bottomChain);
       cost += option?.price || 0;
     }
 
-    if (config.bracketType && product.features.hasBracketType) {
+    if (config.bracketType && product.features.hasBracketType && visibleOptions.showBracketType) {
       const option = BRACKET_TYPE_OPTIONS.find((o) => o.id === config.bracketType);
       cost += option?.price || 0;
     }
 
+    if (config.chainColor && product.features.hasChainColor) {
+      const option = CHAIN_COLOR_OPTIONS.find((o) => o.id === config.chainColor);
+      cost += option?.price || 0;
+    }
+
+    if (config.wrappedCassette && product.features.hasWrappedCassette) {
+      const option = WRAPPED_CASSETTE_OPTIONS.find((o) => o.id === config.wrappedCassette);
+      cost += option?.price || 0;
+    }
+
+    if (config.cassetteMatchingBar && product.features.hasCassetteMatchingBar) {
+      const option = CASSETTE_MATCHING_BAR_OPTIONS.find((o) => o.id === config.cassetteMatchingBar);
+      cost += option?.price || 0;
+    }
+
     return cost;
-  }, [config, product.features]);
+  }, [config, product.features, visibleOptions, installationOptions, controlOptions]);
 
   const totalPrice = basePrice + additionalCost;
 
@@ -126,7 +206,7 @@ const CustomizationModal = ({
   };
 
   return (
-    <div className="bg-white min-h-screen">
+    <div className="bg-white min-h-screen relative z-20">
       {/* Breadcrumb */}
       <div className="px-4 md:px-6 lg:px-20 py-3 md:py-4 border-b border-gray-100">
         <div className="max-w-[1200px] mx-auto">
@@ -182,7 +262,7 @@ const CustomizationModal = ({
 
                 {/* Headrail Selector */}
                 {product.features.hasHeadrail && (
-                  <div className="pt-6">
+                  <div className="pt-6 relative z-[60]">
                     <HeadrailSelector
                       options={HEADRAIL_OPTIONS}
                       selectedHeadrail={config.headrail}
@@ -192,7 +272,7 @@ const CustomizationModal = ({
                 )}
 
                 {/* Headrail Colour Selector */}
-                {product.features.hasHeadrailColour && (
+                {product.features.hasHeadrailColour && visibleOptions.showHeadrailColour && (
                   <div className="pt-6 relative z-50">
                     <HeadrailColourSelector
                       options={HEADRAIL_COLOUR_OPTIONS}
@@ -203,10 +283,10 @@ const CustomizationModal = ({
                 )}
 
                 {/* Installation Method Selector */}
-                {product.features.hasInstallationMethod && (
-                  <div className="pt-6">
+                {product.features.hasInstallationMethod && visibleOptions.showInstallationMethod && (
+                  <div className="pt-6 relative z-[45]">
                     <InstallationMethodSelector
-                      options={INSTALLATION_METHOD_OPTIONS}
+                      options={installationOptions}
                       selectedMethod={config.installationMethod}
                       onMethodChange={(methodId) => setConfig({ ...config, installationMethod: methodId })}
                     />
@@ -214,10 +294,10 @@ const CustomizationModal = ({
                 )}
 
                 {/* Control Option Selector */}
-                {product.features.hasControlOption && (
-                  <div className="pt-6">
+                {product.features.hasControlOption && visibleOptions.showControlOption && (
+                  <div className="pt-6 relative z-[40]">
                     <ControlOptionSelector
-                      options={CONTROL_OPTIONS}
+                      options={controlOptions}
                       selectedOption={config.controlOption}
                       onOptionChange={(optionId) => setConfig({ ...config, controlOption: optionId })}
                     />
@@ -225,8 +305,8 @@ const CustomizationModal = ({
                 )}
 
                 {/* Stacking Selector */}
-                {product.features.hasStacking && (
-                  <div className="pt-6">
+                {product.features.hasStacking && visibleOptions.showStacking && (
+                  <div className="pt-6 relative z-[35]">
                     <StackingSelector
                       options={STACKING_OPTIONS}
                       selectedStacking={config.stacking}
@@ -236,8 +316,8 @@ const CustomizationModal = ({
                 )}
 
                 {/* Control Side Selector */}
-                {product.features.hasControlSide && (
-                  <div className="pt-6">
+                {product.features.hasControlSide && visibleOptions.showControlSide && (
+                  <div className="pt-6 relative z-[32]">
                     <ControlSideSelector
                       options={CONTROL_SIDE_OPTIONS}
                       selectedSide={config.controlSide}
@@ -247,7 +327,7 @@ const CustomizationModal = ({
                 )}
 
                 {/* Bottom Chain Selector */}
-                {product.features.hasBottomChain && (
+                {product.features.hasBottomChain && visibleOptions.showBottomChain && (
                   <div className="pt-6 relative z-30">
                     <BottomChainSelector
                       options={BOTTOM_CHAIN_OPTIONS}
@@ -258,12 +338,45 @@ const CustomizationModal = ({
                 )}
 
                 {/* Bracket Type Selector */}
-                {product.features.hasBracketType && (
+                {product.features.hasBracketType && visibleOptions.showBracketType && (
                   <div className="pt-6 relative z-20">
                     <BracketTypeSelector
                       options={BRACKET_TYPE_OPTIONS}
                       selectedBracket={config.bracketType}
                       onBracketChange={(bracketId) => setConfig({ ...config, bracketType: bracketId })}
+                    />
+                  </div>
+                )}
+
+                {/* Chain Color Selector */}
+                {product.features.hasChainColor && (
+                  <div className="pt-6 relative z-10">
+                    <ChainColorSelector
+                      options={CHAIN_COLOR_OPTIONS}
+                      selectedColor={config.chainColor}
+                      onColorChange={(colorId) => setConfig({ ...config, chainColor: colorId })}
+                    />
+                  </div>
+                )}
+
+                {/* Wrapped Cassette Selector */}
+                {product.features.hasWrappedCassette && (
+                  <div className="pt-6 relative z-[5]">
+                    <WrappedCassetteSelector
+                      options={WRAPPED_CASSETTE_OPTIONS}
+                      selectedOption={config.wrappedCassette}
+                      onOptionChange={(optionId) => setConfig({ ...config, wrappedCassette: optionId })}
+                    />
+                  </div>
+                )}
+
+                {/* Cassette Matching Bar Selector */}
+                {product.features.hasCassetteMatchingBar && (
+                  <div className="pt-6 relative z-[3]">
+                    <CassetteMatchingBarSelector
+                      options={CASSETTE_MATCHING_BAR_OPTIONS}
+                      selectedBar={config.cassetteMatchingBar}
+                      onBarChange={(barId) => setConfig({ ...config, cassetteMatchingBar: barId })}
                     />
                   </div>
                 )}

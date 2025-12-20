@@ -110,14 +110,27 @@ export async function fetchProductBySlug(slug: string): Promise<ApiProductRespon
 }
 
 /**
+ * Map frontend category slugs to backend category slugs
+ * Handles cases where frontend and backend use different naming
+ */
+function mapCategorySlug(frontendSlug: string): string {
+  const slugMap: Record<string, string> = {
+    'day-and-night-blinds': 'day-night-blinds', // Backend uses 'day-night-blinds' (no 'and')
+  };
+
+  return slugMap[frontendSlug] || frontendSlug;
+}
+
+/**
  * Fetch products filtered by category slug
- * Since backend doesn't have category filter, we fetch all and filter
+ * Maps frontend slug to backend slug if needed
  */
 export async function fetchProductsByCategory(categorySlug: string): Promise<ApiProduct[]> {
+  const backendSlug = mapCategorySlug(categorySlug);
   const response = await fetchProducts({ limit: 500 });
 
   return response.data.filter((product) =>
-    product.categories.some((cat) => cat.slug === categorySlug)
+    product.categories.some((cat) => cat.slug === backendSlug)
   );
 }
 

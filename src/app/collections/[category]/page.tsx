@@ -15,26 +15,26 @@ interface PageProps {
 export async function generateStaticParams() {
   // Combine backend categories with frontend-defined slugs
   const slugs = new Set(ALL_COLLECTION_SLUGS);
-  
+
   try {
     const categories = await fetchCategories();
     categories.forEach((cat) => slugs.add(cat.slug));
   } catch (error) {
     console.error('Error fetching categories for static params:', error);
   }
-  
+
   return Array.from(slugs).map((category) => ({ category }));
 }
 
 // Generate metadata for SEO
 export async function generateMetadata({ params }: PageProps) {
   const { category } = await params;
-  
+
   // Try to get name from backend categories first
   try {
     const categories = await fetchCategories();
     const categoryData = categories.find((c) => c.slug === category);
-    
+
     if (categoryData) {
       return {
         title: `${categoryData.name} | Your Next Blinds`,
@@ -44,10 +44,10 @@ export async function generateMetadata({ params }: PageProps) {
   } catch {
     // Fall through to use display names
   }
-  
+
   // Use frontend display names
   const displayName = COLLECTION_DISPLAY_NAMES[category] || category.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-  
+
   return {
     title: `${displayName} | Your Next Blinds`,
     description: `Browse our collection of ${displayName.toLowerCase()}. Find the perfect blinds for your home.`,
@@ -56,10 +56,18 @@ export async function generateMetadata({ params }: PageProps) {
 
 export default async function CollectionPage({ params }: PageProps) {
   const { category: categorySlug } = await params;
-  
+
+  // Map frontend slug to backend slug if needed
+  const mapCategorySlug = (slug: string): string => {
+    const slugMap: Record<string, string> = {
+      'day-and-night-blinds': 'day-night-blinds', // Backend uses different format
+    };
+    return slugMap[slug] || slug;
+  };
+
   // Validate the slug exists in our defined collections
   const isValidSlug = ALL_COLLECTION_SLUGS.includes(categorySlug);
-  
+
   // Fetch categories from backend
   let backendCategories: Awaited<ReturnType<typeof fetchCategories>> = [];
   try {
@@ -67,26 +75,27 @@ export default async function CollectionPage({ params }: PageProps) {
   } catch (error) {
     console.error('Error fetching categories:', error);
   }
-  
-  // Find matching backend category
-  const backendCategory = backendCategories.find((c) => c.slug === categorySlug);
-  
+
+  // Find matching backend category using mapped slug
+  const backendSlug = mapCategorySlug(categorySlug);
+  const backendCategory = backendCategories.find((c) => c.slug === backendSlug);
+
   // If slug is not in our defined list AND not in backend, show 404
   if (!isValidSlug && !backendCategory) {
     notFound();
   }
-  
+
   // Get display name
-  const categoryName = backendCategory?.name || COLLECTION_DISPLAY_NAMES[categorySlug] || 
+  const categoryName = backendCategory?.name || COLLECTION_DISPLAY_NAMES[categorySlug] ||
     categorySlug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-  
-  const categoryDescription = backendCategory?.description || 
+
+  const categoryDescription = backendCategory?.description ||
     `Explore our beautiful collection of ${categoryName.toLowerCase()} for your home.`;
-  
+
   // Fetch products if we have a backend category
   let apiProducts: ApiProduct[] = [];
   let products: Product[] = [];
-  
+
   if (backendCategory) {
     try {
       apiProducts = await fetchProductsByCategory(categorySlug);
@@ -95,10 +104,10 @@ export default async function CollectionPage({ params }: PageProps) {
       console.error('Error fetching products:', error);
     }
   }
-  
+
   // Extract filter options from products
   const filterOptions = extractFilterOptions(apiProducts);
-  
+
   // Check if we should show coming soon (no backend category or no products)
   const showComingSoon = !backendCategory || products.length === 0;
 

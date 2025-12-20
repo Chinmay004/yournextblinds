@@ -3,21 +3,20 @@
 import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 
-interface BracketTypeOption {
+interface WrappedCassetteOption {
     id: string;
     name: string;
-    description?: string;
     price?: number;
     image?: string;
 }
 
-interface BracketTypeSelectorProps {
-    options: BracketTypeOption[];
-    selectedBracket: string | null;
-    onBracketChange: (bracketId: string) => void;
+interface WrappedCassetteSelectorProps {
+    options: WrappedCassetteOption[];
+    selectedOption: string | null;
+    onOptionChange: (optionId: string) => void;
 }
 
-const BracketTypeSelector = ({ options, selectedBracket, onBracketChange }: BracketTypeSelectorProps) => {
+const WrappedCassetteSelector = ({ options, selectedOption, onOptionChange }: WrappedCassetteSelectorProps) => {
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -35,12 +34,12 @@ const BracketTypeSelector = ({ options, selectedBracket, onBracketChange }: Brac
         };
     }, []);
 
-    const selectedOption = options.find(opt => opt.id === selectedBracket);
+    const selected = options.find(opt => opt.id === selectedOption);
 
     return (
         <div className="flex flex-col gap-4">
             <div className="flex items-center gap-2">
-                <h3 className="text-lg font-medium text-[#3a3a3a]">Bracket Type</h3>
+                <h3 className="text-lg font-medium text-[#3a3a3a]">Wrapped Cassette and Bottom Bar</h3>
                 <button
                     type="button"
                     className="w-5 h-5 rounded-full border-2 border-gray-400 flex items-center justify-center text-gray-400 text-xs hover:border-gray-600 hover:text-gray-600"
@@ -57,7 +56,7 @@ const BracketTypeSelector = ({ options, selectedBracket, onBracketChange }: Brac
                     className="w-full border-2 border-gray-300 rounded-lg p-3 bg-white text-left flex items-center justify-between hover:border-[#00473c] transition-colors"
                 >
                     <span className="text-[#3a3a3a] font-medium">
-                        {selectedOption ? selectedOption.name : 'Select option'}
+                        {selected ? selected.name : 'Select option'}
                     </span>
                     <svg
                         className={`w-5 h-5 text-gray-500 transition-transform ${isOpen ? 'rotate-180' : ''}`}
@@ -70,16 +69,16 @@ const BracketTypeSelector = ({ options, selectedBracket, onBracketChange }: Brac
                 </button>
 
                 {isOpen && (
-                    <div className="absolute z-[9999] w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-80 overflow-y-auto">
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-80 overflow-y-auto">
                         {options.map((option) => (
                             <button
                                 key={option.id}
                                 type="button"
                                 onClick={() => {
-                                    onBracketChange(option.id);
+                                    onOptionChange(option.id);
                                     setIsOpen(false);
                                 }}
-                                className={`w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center gap-3 border-b border-gray-100 last:border-0 ${selectedBracket === option.id ? 'bg-[#f6fffd]' : ''
+                                className={`w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center gap-3 border-b border-gray-100 last:border-0 ${selectedOption === option.id ? 'bg-[#f6fffd]' : ''
                                     }`}
                             >
                                 {/* Thumbnail Image */}
@@ -96,7 +95,7 @@ const BracketTypeSelector = ({ options, selectedBracket, onBracketChange }: Brac
                                 )}
 
                                 <div className="flex-grow">
-                                    <p className={`text-sm font-medium ${selectedBracket === option.id ? 'text-[#00473c]' : 'text-[#3a3a3a]'}`}>
+                                    <p className={`text-sm font-medium ${selectedOption === option.id ? 'text-[#00473c]' : 'text-[#3a3a3a]'}`}>
                                         {option.name}
                                     </p>
                                 </div>
@@ -113,13 +112,13 @@ const BracketTypeSelector = ({ options, selectedBracket, onBracketChange }: Brac
             </div>
 
             {/* Preview of selected option */}
-            {selectedOption && (
+            {selected && (
                 <div className="border border-gray-200 rounded-lg p-4 bg-gray-50 flex items-center gap-4">
-                    {selectedOption.image && (
+                    {selected.image && (
                         <div className="w-20 h-20 bg-white rounded-md overflow-hidden border border-gray-200 flex-shrink-0 flex items-center justify-center">
                             <Image
-                                src={selectedOption.image}
-                                alt={selectedOption.name}
+                                src={selected.image}
+                                alt={selected.name}
                                 width={80}
                                 height={80}
                                 className="object-contain"
@@ -127,12 +126,9 @@ const BracketTypeSelector = ({ options, selectedBracket, onBracketChange }: Brac
                         </div>
                     )}
                     <div>
-                        <p className="font-medium text-[#3a3a3a]">{selectedOption.name}</p>
-                        {selectedOption.description && (
-                            <p className="text-gray-500 text-sm mt-1">{selectedOption.description}</p>
-                        )}
-                        {selectedOption.price && selectedOption.price > 0 ? (
-                            <p className="text-[#00473c] font-bold mt-1">+£{selectedOption.price.toFixed(2)}</p>
+                        <p className="font-medium text-[#3a3a3a]">{selected.name}</p>
+                        {selected.price && selected.price > 0 ? (
+                            <p className="text-[#00473c] font-bold mt-1">+£{selected.price.toFixed(2)}</p>
                         ) : (
                             <p className="text-gray-500 text-sm mt-1">Included in price</p>
                         )}
@@ -151,4 +147,4 @@ const BracketTypeSelector = ({ options, selectedBracket, onBracketChange }: Brac
     );
 };
 
-export default BracketTypeSelector;
+export default WrappedCassetteSelector;

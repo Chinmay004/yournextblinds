@@ -124,8 +124,9 @@ const CustomizationModal = ({
       // Control Side for Classic and Platinum
       showControlSide: headrail === 'classic' || headrail === 'platinum',
 
-      // Bottom Chain for all headrail types (Louvres, Classic, Platinum)
-      showBottomChain: headrail === 'louvres-only' || headrail === 'classic' || headrail === 'platinum',
+      // Bottom Chain for all headrail types (Classic, Platinum)
+      // showBottomChain: headrail === 'louvres-only' || headrail === 'classic' || headrail === 'platinum',
+      showBottomChain: headrail === 'classic' || headrail === 'platinum',
 
       // Bracket Type for Classic and Platinum
       showBracketType: headrail === 'classic' || headrail === 'platinum',
